@@ -95,13 +95,6 @@ const buildPolicy = ({ name, account, stage, region }) => {
       },
       {
         Effect: 'Allow',
-        Action: 'kinesis:*',
-        Resource: [
-          `arn:aws:kinesis:*:*:stream/${name}-${stage}-${region}`
-        ]
-      },
-      {
-        Effect: 'Allow',
         Action: [
           'iam:GetRole',
           'iam:CreateRole',
@@ -112,16 +105,6 @@ const buildPolicy = ({ name, account, stage, region }) => {
         Resource: [
           `arn:aws:iam::${account}:role/${name}-${stage}-${region}-lambdaRole`
         ]
-      },
-      {
-        Effect: 'Allow',
-        Action: 'sqs:*',
-        Resource: [`arn:aws:sqs:*:${account}:${name}-${stage}-${region}`]
-      },
-      {
-        Effect: 'Allow',
-        Action: ['cloudwatch:GetMetricStatistics'],
-        Resource: ['*']
       },
       {
         Action: [
@@ -219,6 +202,16 @@ module.exports = class extends Generator {
         type: 'confirm',
         name: 's3',
         message: 'Is your service going to be using S3 buckets?'
+      },
+      {
+        type: 'confirm',
+        name: 'kinesis',
+        message: 'Is your service going to be using Kinesis?'
+      },
+      {
+        type: 'confirm',
+        name: 'sqs',
+        message: 'Is your service going to be using SQS?'
       }
     ]).then(answers => {
       this.slsSettings = answers;
@@ -251,7 +244,23 @@ module.exports = class extends Generator {
       });
     }
 
+    if (this.slsSettings.kinesis) {
+      policy.Statement.push({
+        Effect: 'Allow',
+        Action: 'kinesis:*',
+        Resource: [
+          `arn:aws:kinesis:*:*:stream/${name}-${stage}-${region}`
+        ]
+      });
 
+      if (this.slsSettings.sqs) {
+        policy.Statement.push({
+          Effect: 'Allow',
+          Action: 'sqs:*',
+          Resource: [`arn:aws:sqs:*:${account}:${name}-${stage}-${region}`]
+        });
+      }
+    }
     const policyString = JSON.stringify(policy, null, 2);
     const accountName = account === '*' ? '' : `${account}-`;
     const fileName = `${accountName}${project}-${escapeValFilename(stage)}-${escapeValFilename(region)}-policy.json`;
