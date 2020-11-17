@@ -85,7 +85,8 @@ const buildPolicy = ({ name, account, stage, region }) => {
         Resource: [
           'arn:aws:apigateway:*::/restapis*',
           'arn:aws:apigateway:*::/apikeys*',
-          'arn:aws:apigateway:*::/usageplans*'
+          'arn:aws:apigateway:*::/usageplans*',
+          'arn:aws:apigateway:*::/domainnames*',
         ]
       },
       {
